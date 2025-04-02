@@ -23,8 +23,7 @@ public class JsonDeserializer<T> implements Deserializer<T> {
 
     @Override
     public T deserialize(final @NonNull String topic, final byte[] data) {
-        ObjectMapper objectMapper =  new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        ObjectMapper objectMapper =  Commons.defaultObjectMapper();
         try {
             JavaType javaType = objectMapper.getTypeFactory().constructType(type);
             return objectMapper.readValue(new String(data, StandardCharsets.UTF_8), javaType);
