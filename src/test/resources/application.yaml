@@ -9,7 +9,7 @@ pg:
           name: payment-processing-batch-topic
         partitions: 10
         replication-factor: 1
-    bootstrap-server: localhost:9092
+#    bootstrap-server: localhost:9092
 logging:
   level:
     pg:

@@ -13,7 +13,6 @@ import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import pg.kafka.businesscase.ProcessPaymentMessage;
 import pg.kafka.config.KafkaIntegrationTest;
-import pg.kafka.config.KafkaPropertiesProvider;
 import pg.kafka.consumer.MessageHandler;
 import pg.kafka.sender.EventSender;
 
@@ -25,7 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 
 @Slf4j
 @KafkaIntegrationTest
-//@EmbeddedKafka
+@EmbeddedKafka(brokerProperties = {"transaction.max.timeout.ms=3600000"})
 class TestKafkaImplementation {
     @Autowired
     private Environment environment;
@@ -33,16 +32,16 @@ class TestKafkaImplementation {
     private EventSender eventSender;
     @Autowired
     private MessageHandler<ProcessPaymentMessage> paymentMessageHandler;
-//    @Autowired
-//    private EmbeddedKafkaBroker embeddedKafkaBroker;
+    @Autowired
+    private EmbeddedKafkaBroker embeddedKafkaBroker;
 
     private final ArgumentCaptor<ProcessPaymentMessage> messageCaptor = ArgumentCaptor.forClass(ProcessPaymentMessage.class);
 
-//    @BeforeEach
-//    void verifyBroker() {
-//        Assertions.assertNotNull(embeddedKafkaBroker);
-//        log.info("Embedded Kafka Broker running at: {}", embeddedKafkaBroker.getBrokersAsString());
-//    }
+    @BeforeEach
+    void verifyBroker() {
+        Assertions.assertNotNull(embeddedKafkaBroker);
+        log.info("Embedded Kafka Broker running at: {}", embeddedKafkaBroker.getBrokersAsString());
+    }
 
     @Test
     void shouldStartWithKafkaConfiguration() {
@@ -55,14 +54,13 @@ class TestKafkaImplementation {
     @SneakyThrows
     void shouldSendAndProcessPaymentMessages() {
         // given
-//        Mockito.doNothing().when(paymentMessageHandler).handleMessage(messageCaptor.capture());
         var message = new ProcessPaymentMessage("P_1", "O1", "DELIVERED", LocalDateTime.now());
 
         // when
         Assertions.assertDoesNotThrow(() -> eventSender.sendEvent(message));
         await()
                 .atMost(Duration.ofSeconds(5))
-                .untilAsserted(() -> Mockito.verify(paymentMessageHandler).handleMessage(any()));
+                .untilAsserted(() -> Mockito.verify(paymentMessageHandler).handleMessage(messageCaptor.capture()));
 
         // then
         Mockito.verify(paymentMessageHandler).handleMessage(any());
