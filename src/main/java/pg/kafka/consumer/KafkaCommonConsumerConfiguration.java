@@ -2,15 +2,15 @@ package pg.kafka.consumer;
 
 import lombok.Builder;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
@@ -18,23 +18,45 @@ import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DefaultAfterRollbackProcessor;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.transaction.KafkaTransactionManager;
+import org.springframework.transaction.support.AbstractPlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.backoff.FixedBackOff;
 import pg.kafka.common.Commons;
 import pg.kafka.common.JsonDeserializer;
+import pg.kafka.config.KafkaProperties;
 import pg.kafka.config.KafkaPropertiesProvider;
 import pg.kafka.config.MessagesDestinationConfig;
+import pg.kafka.message.Message;
 import pg.kafka.message.MessageDestination;
+import pg.kafka.producer.DestinationResolver;
+import pg.kafka.topic.TopicName;
 import pg.lib.common.spring.storage.HeadersHolder;
 
 import java.util.*;
 
 @Log4j2
 @Configuration
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class KafkaCommonConsumerConfiguration {
 
     private final ConfigurableBeanFactory beanFactory;
+    private final DestinationResolver destinationResolver;
+
+    @Lazy
+    @Autowired
+    @SuppressWarnings("checkstyle:HiddenField")
+    public KafkaCommonConsumerConfiguration(final ConfigurableBeanFactory beanFactory,
+                                            final DestinationResolver destinationResolver) {
+        this.beanFactory = beanFactory;
+        this.destinationResolver = destinationResolver;
+    }
+
+    @Value("${pg.kafka-transaction-manager.default-timeout:10}")
+    private int transactionManagerDefaultTimeout;
+
+    @Bean
+    public MessagesDestinationConfig messagesDestinationConfig(final List<MessageDestination> messageDestinations) {
+        return new MessagesDestinationConfig(messageDestinations);
+    }
 
     @Bean
     public MessageHandlerLocator messageHandlerLocator(final @NonNull List<MessageHandler<?>> messageHandlers,
@@ -43,16 +65,17 @@ public class KafkaCommonConsumerConfiguration {
     }
 
     @Bean
-    public List<ConcurrentMessageListenerContainer<String, Object>> kafkaMessageListeners(
+    public List<ConcurrentMessageListenerContainer<String, ? extends Message>> kafkaMessageListeners(
             final @NonNull MessagesDestinationConfig messagesDestinationConfig,
             final @NonNull KafkaPropertiesProvider kafkaPropertiesProvider,
             final @NonNull MessageHandlerLocator messageHandlerLocator,
             final @NonNull HeadersHolder headersHolder
     ) {
-        List<ConcurrentMessageListenerContainer<String, Object>> listeners = new ArrayList<>();
+        List<ConcurrentMessageListenerContainer<String, ? extends Message>> listeners = new ArrayList<>();
 
         var destinations = messagesDestinationConfig.getDestinations();
-        var consumerConfigs = kafkaPropertiesProvider.getKafkaProperties().getConsumerConfigs();
+        KafkaProperties kafkaProperties = kafkaPropertiesProvider.getKafkaProperties();
+        var consumerConfigs = kafkaProperties.getConsumerConfigs();
 
         for (MessageDestination destination : destinations) {
             var handler = messageHandlerLocator.getMessageHandler(destination.getTopic());
@@ -63,29 +86,35 @@ public class KafkaCommonConsumerConfiguration {
 
             var consumerConfig = Commons.defaultConsumerProperties();
             consumerConfig.putAll(consumerConfigs.getOrDefault(destination.getTopic(), new HashMap<>()));
+            consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServer());
             String consumerGroup = (String) handler.getConsumerGroup().orElseGet(() -> destination.getTopic().getName());
 
-            var consumerBeanName = destination.getTopic().getName() + "-listener-" + consumerGroup;
+            var consumerBeanName = handler.getConsumerGroup().isPresent()
+                    ? destination.getTopic().getName() + "-listener-" + consumerGroup
+                    : destination.getTopic().getName() + "-listener";
             var kafkaConsumer = new KafkaConsumer(messageHandlerLocator, headersHolder, consumerGroup);
             beanFactory.registerSingleton(consumerBeanName, kafkaConsumer);
             log.info("Registered kafka listener bean: {} from destination: {}", consumerBeanName, destination);
 
             var listenerContainerBeanName = consumerBeanName + "-container";
-            ConcurrentMessageListenerContainer<String, Object> listenerContainer = listenerContainerBuilder()
+            ConcurrentMessageListenerContainer<String, ? extends Message> listenerContainer = listenerContainerBuilder()
                     .kafkaConsumer(kafkaConsumer)
                     .consumerGroup(consumerGroup)
                     .consumerConfig(consumerConfig)
                     .destination(destination)
                     .build();
-            log.info("Registered kafka listener container bean: {} from config: {}", listenerContainerBeanName, destination);
+            log.info("Registered kafka listener container bean: {} from config: {}, with consumer group: {}, listening to broker: {}",
+                    listenerContainerBeanName, destination, consumerGroup, kafkaProperties.getBootstrapServer());
             listeners.add(listenerContainer);
         }
 
+        log.info("Finished initializing kafka message listeners, listeners: {}", listeners);
         return listeners;
     }
 
+    @SuppressWarnings("unchecked")
     @Builder(builderMethodName = "listenerContainerBuilder")
-    public ConcurrentMessageListenerContainer<String, Object> kafkaListener(
+    public <T extends Message> ConcurrentMessageListenerContainer<String, T> kafkaListener(
             final @NonNull KafkaConsumer kafkaConsumer,
             final @NonNull String consumerGroup,
             final @NonNull Map<String, Object> consumerConfig,
@@ -101,7 +130,7 @@ public class KafkaCommonConsumerConfiguration {
             DefaultTransactionDefinition transactionDefinition = new DefaultTransactionDefinition();
             transactionDefinition.setTimeout(consumerConfig.get(ContainerProps.TRANSACTION_TIMEOUT) == null
                     ? 0 : (int) consumerConfig.get(ContainerProps.TRANSACTION_TIMEOUT));
-            containerProperties.setKafkaAwareTransactionManager(beanFactory.getBean(KafkaTransactionManager.class));
+            containerProperties.setKafkaAwareTransactionManager(kafkaTransactionManager(destination.getTopic()));
             containerProperties.setTransactionDefinition(transactionDefinition);
         }
 
@@ -115,25 +144,30 @@ public class KafkaCommonConsumerConfiguration {
         props.putAll(consumerProps);
         containerProperties.setKafkaConsumerProperties(props);
 
-        var containerFactory = new ConcurrentMessageListenerContainer<>(consumerFactory(consumerConfig), containerProperties);
-        containerFactory.setConcurrency((Integer) consumerConfig.getOrDefault(ContainerProps.CONCURRENCY, 1));
+        var containerFactory = new ConcurrentMessageListenerContainer<String, T>(
+                (ConsumerFactory<String, ? super T>) consumerFactory(consumerConfig, destination.getMessageClass()), containerProperties);
+        containerFactory.setConcurrency(Integer.parseInt(consumerConfig.getOrDefault(ContainerProps.CONCURRENCY, 1).toString()));
         containerFactory.setBeanName(consumerGroup);
 
-        var rollbackProcessor = new DefaultAfterRollbackProcessor<String, Object>(null,
-                new FixedBackOff(0L, (Long) consumerConfig.getOrDefault(ContainerProps.RETRY, 1)), null, true);
+        var rollbackProcessor = new DefaultAfterRollbackProcessor<String, T>(null,
+                new FixedBackOff(0L, Long.parseLong(consumerConfig.getOrDefault(ContainerProps.RETRY, 1L).toString())), null, false);
         containerFactory.setAfterRollbackProcessor(rollbackProcessor);
 
         return containerFactory;
     }
 
-    @SuppressWarnings("unchecked")
-    public ConsumerFactory<String, Object> consumerFactory(final Map<String, Object> consumerConfig) {
-        DefaultKafkaConsumerFactory<String, Object> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerConfig);
-        consumerFactory.setKeyDeserializer((Deserializer<String>) consumerConfig.getOrDefault(
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class));
+    public KafkaTransactionManager<String, Message> kafkaTransactionManager(final TopicName topicName) {
+        var transactionManager = new KafkaTransactionManager<>(destinationResolver.getTemplate(topicName).getProducerFactory());
+        transactionManager.setTransactionSynchronization(AbstractPlatformTransactionManager.SYNCHRONIZATION_NEVER);
+        transactionManager.setDefaultTimeout(transactionManagerDefaultTimeout);
+        return transactionManager;
+    }
 
-        Deserializer<Object> errorHandlingDeserializer = new ErrorHandlingDeserializer<>((Deserializer<Object>) consumerConfig.getOrDefault(
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class));
+    public <T extends Message> ConsumerFactory<String, T> consumerFactory(final Map<String, Object> consumerConfig,
+                                                                          final Class<T> messageClass) {
+        DefaultKafkaConsumerFactory<String, T> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerConfig);
+        consumerFactory.setKeyDeserializer(new StringDeserializer());
+        ErrorHandlingDeserializer<T> errorHandlingDeserializer = new ErrorHandlingDeserializer<>(new JsonDeserializer<>(messageClass));
         consumerFactory.setValueDeserializer(errorHandlingDeserializer);
         return consumerFactory;
     }

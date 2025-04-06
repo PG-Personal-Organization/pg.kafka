@@ -2,11 +2,14 @@ package pg.kafka.producer;
 
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import pg.kafka.common.Commons;
+import pg.kafka.config.KafkaProperties;
 import pg.kafka.config.KafkaPropertiesProvider;
 import pg.kafka.config.MessagesDestinationConfig;
 import pg.kafka.message.Message;
@@ -43,7 +46,7 @@ public class KafkaCommonProducerConfiguration {
                 messageDestinations, producerConfigs);
 
         for (MessageDestination destination : messageDestinations) {
-            var template = buildTemplate(destination, producerConfigs);
+            var template = buildTemplate(destination, kafkaProperties, producerConfigs);
             destinations.put(destination.getMessageClass(), destination.getTopic());
             topicToTemplates.put(destination.getTopic(), template);
         }
@@ -54,9 +57,12 @@ public class KafkaCommonProducerConfiguration {
     }
 
     private <T extends Message> KafkaTemplate<String, T> buildTemplate(final MessageDestination destination,
+                                                                       final KafkaProperties kafkaProperties,
                                                                        final Map<TopicName, Map<String, Object>> producerConfigs) {
         var producerConfig = Commons.defaultProducerProperties();
         producerConfig.putAll(producerConfigs.getOrDefault(destination.getTopic(), new HashMap<>()));
+        producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServer());
+
         log.debug("Creating producer for topic: {} with config: {}", destination.getTopic(), producerConfig);
 
         var producerFactory = new DefaultKafkaProducerFactory<String, T>(producerConfig);

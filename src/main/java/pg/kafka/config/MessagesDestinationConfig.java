@@ -1,17 +1,13 @@
 package pg.kafka.config;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import pg.kafka.message.MessageDestination;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@Configuration
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@AllArgsConstructor
 public class MessagesDestinationConfig {
-    private final List<MessageDestination> destinations = new ArrayList<>();
+    private final List<MessageDestination> destinations;
 }

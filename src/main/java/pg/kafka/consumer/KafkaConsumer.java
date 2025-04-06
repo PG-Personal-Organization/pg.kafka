@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Headers;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.listener.AbstractConsumerSeekAware;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.util.StopWatch;
@@ -25,6 +26,7 @@ public class KafkaConsumer extends AbstractConsumerSeekAware implements MessageL
 
     @Override
     @SuppressWarnings("unchecked")
+    @KafkaListener
     public void onMessage(final @NonNull ConsumerRecord<String, Object> message) {
         log.info("Consumer :'{}' process event from partition: {}-{}, and offset: {}, headers: {}",
                 consumerGroup, message.topic(), message.partition(), message.offset(), storeAndGetHeaders(message.headers()));

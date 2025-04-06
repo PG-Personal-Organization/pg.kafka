@@ -31,6 +31,7 @@ public class KafkaConfiguration {
 
     @Bean
     public KafkaPropertiesProvider kafkaPropertiesProvider() {
+        log.info("Kafka properties: {}", kafkaProperties);
         return new KafkaPropertiesProvider(kafkaProperties);
     }
 

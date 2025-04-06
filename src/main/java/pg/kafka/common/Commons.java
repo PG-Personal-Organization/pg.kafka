@@ -53,7 +53,6 @@ public class Commons {
 
     public Map<String, Object> defaultProducerProperties() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
@@ -71,7 +70,6 @@ public class Commons {
 
     public Map<String, Object> defaultConsumerProperties() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
@@ -84,8 +82,8 @@ public class Commons {
         props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, defaultMaxPollIntervalMillis);
         props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, defaultHeartbeatIntervalMillis);
 
-        props.put(ContainerProps.EOS_MODE, ContainerProperties.EOSMode.V2);
-        props.put(ContainerProps.ACK_MODE, ContainerProperties.AckMode.BATCH);
+        props.put(ContainerProps.EOS_MODE, ContainerProperties.EOSMode.V2.name());
+        props.put(ContainerProps.ACK_MODE, ContainerProperties.AckMode.RECORD.name());
         props.put(ContainerProps.ENABLE_TRANSACTION, defaultEnableTransactional);
         props.put(ContainerProps.TRANSACTION_TIMEOUT, defaultConsumerTransactionTimeout);
         props.put(ContainerProps.CONCURRENCY, defaultConcurrency);

@@ -2,6 +2,7 @@ package pg.kafka.producer;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.kafka.core.KafkaTemplate;
 import pg.kafka.message.Message;
@@ -14,6 +15,7 @@ import java.util.Optional;
 
 @Log4j2
 @RequiredArgsConstructor
+@ToString
 public class DestinationResolver {
     private final Map<Class<? extends Message>, TopicName> destinations;
     private final Map<TopicName, KafkaTemplate<String, ? extends Message>> kafkaTemplates;
