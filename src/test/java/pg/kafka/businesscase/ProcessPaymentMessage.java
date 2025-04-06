@@ -2,21 +2,21 @@ package pg.kafka.businesscase;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import pg.kafka.message.Message;
 
 import java.time.LocalDateTime;
 
 
-@RequiredArgsConstructor
+@NoArgsConstructor
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class ProcessPaymentMessage extends Message {
-    private final String paymentId;
-    private final String orderId;
-    private final String paymentStatus;
+    private String paymentId;
+    private String orderId;
+    private String paymentStatus;
     private LocalDateTime paymentDate;
 
     public ProcessPaymentMessage(String paymentId,

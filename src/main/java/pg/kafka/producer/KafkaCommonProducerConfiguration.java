@@ -4,11 +4,13 @@ import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import pg.kafka.common.Commons;
+import pg.kafka.common.KafkaJsonSerializer;
 import pg.kafka.config.KafkaProperties;
 import pg.kafka.config.KafkaPropertiesProvider;
 import pg.kafka.config.MessagesDestinationConfig;
@@ -66,6 +68,8 @@ public class KafkaCommonProducerConfiguration {
         log.debug("Creating producer for topic: {} with config: {}", destination.getTopic(), producerConfig);
 
         var producerFactory = new DefaultKafkaProducerFactory<String, T>(producerConfig);
+        producerFactory.setKeySerializer(new StringSerializer());
+        producerFactory.setValueSerializer((KafkaJsonSerializer<T>) new KafkaJsonSerializer<>(destination.getMessageClass()));
 
         var template = new KafkaTemplate<>(producerFactory);
         template.setDefaultTopic(destination.getTopic().getName());

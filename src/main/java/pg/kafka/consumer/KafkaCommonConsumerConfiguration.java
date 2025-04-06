@@ -22,7 +22,7 @@ import org.springframework.transaction.support.AbstractPlatformTransactionManage
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.backoff.FixedBackOff;
 import pg.kafka.common.Commons;
-import pg.kafka.common.JsonDeserializer;
+import pg.kafka.common.KafkaJsonDeserializer;
 import pg.kafka.config.KafkaProperties;
 import pg.kafka.config.KafkaPropertiesProvider;
 import pg.kafka.config.MessagesDestinationConfig;
@@ -166,9 +166,9 @@ public class KafkaCommonConsumerConfiguration {
 
     public <T extends Message> ConsumerFactory<String, T> consumerFactory(final Map<String, Object> consumerConfig,
                                                                           final Class<T> messageClass) {
-        DefaultKafkaConsumerFactory<String, T> consumerFactory = new DefaultKafkaConsumerFactory<>(consumerConfig);
+        var consumerFactory = new DefaultKafkaConsumerFactory<String, T>(consumerConfig);
         consumerFactory.setKeyDeserializer(new StringDeserializer());
-        ErrorHandlingDeserializer<T> errorHandlingDeserializer = new ErrorHandlingDeserializer<>(new JsonDeserializer<>(messageClass));
+        ErrorHandlingDeserializer<T> errorHandlingDeserializer = new ErrorHandlingDeserializer<>(new KafkaJsonDeserializer<>(messageClass));
         consumerFactory.setValueDeserializer(errorHandlingDeserializer);
         return consumerFactory;
     }

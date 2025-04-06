@@ -7,8 +7,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.experimental.UtilityClass;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.kafka.listener.ContainerProperties;
 import pg.kafka.consumer.ContainerProps;
 
@@ -53,8 +51,6 @@ public class Commons {
 
     public Map<String, Object> defaultProducerProperties() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, defaultEnableIdempotence);
         props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, defaultRequestTimeoutMillis);
@@ -73,8 +69,6 @@ public class Commons {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         props.put(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, false);
 
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, defaultMaxPollRecords);

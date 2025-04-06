@@ -16,6 +16,7 @@ import pg.lib.common.spring.config.CommonModuleConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Import({
         KafkaConfiguration.class,
@@ -52,6 +53,11 @@ public class KafkaTestConfiguration {
         @Override
         public Class<ProcessPaymentMessage> getMessageType() {
             return ProcessPaymentMessage.class;
+        }
+
+        @Override
+        public Optional<String> getConsumerGroup() {
+            return Optional.of("ProcessPaymentMessage-ConsumerGroup");
         }
 
         @Override

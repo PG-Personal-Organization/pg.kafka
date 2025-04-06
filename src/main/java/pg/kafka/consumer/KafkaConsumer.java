@@ -26,7 +26,6 @@ public class KafkaConsumer extends AbstractConsumerSeekAware implements MessageL
 
     @Override
     @SuppressWarnings("unchecked")
-    @KafkaListener
     public void onMessage(final @NonNull ConsumerRecord<String, Object> message) {
         log.info("Consumer :'{}' process event from partition: {}-{}, and offset: {}, headers: {}",
                 consumerGroup, message.topic(), message.partition(), message.offset(), storeAndGetHeaders(message.headers()));
