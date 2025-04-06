@@ -1,6 +1,7 @@
 package pg.kafka.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 import static org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG;
 
+@Log4j2
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Configuration
 public class KafkaCommonConfiguration {
@@ -35,6 +37,8 @@ public class KafkaCommonConfiguration {
         KafkaAdmin admin = new KafkaAdmin(configs);
         admin.setOperationTimeout(topicOperationTimeout);
         admin.setAutoCreate(autoCreate);
+        log.debug("KafkaAdmin created with configs: {}, topicOperationTimeout: {}, autoCreate: {}",
+                configs, topicOperationTimeout, autoCreate);
 
         return admin;
     }

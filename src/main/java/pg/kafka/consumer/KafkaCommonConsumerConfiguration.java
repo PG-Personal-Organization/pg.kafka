@@ -109,6 +109,7 @@ public class KafkaCommonConsumerConfiguration {
         }
 
         log.info("Finished initializing kafka message listeners, listeners: {}", listeners);
+        listeners.forEach(ConcurrentMessageListenerContainer::start);
         return listeners;
     }
 
