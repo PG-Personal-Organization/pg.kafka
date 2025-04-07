@@ -10,7 +10,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <artifactId>kafka</artifactId>
+    <artifactId>pg-kafka</artifactId>
     <packaging>jar</packaging>
     <version>1.0.0</version>
 
@@ -25,7 +25,7 @@
         <!-- Internal -->
         <dependency>
             <groupId>org.pg</groupId>
-            <artifactId>pg.lib.common</artifactId>
+            <artifactId>pg-lib-common</artifactId>
             <version>${pg-lib-common.version}</version>
         </dependency>
 
