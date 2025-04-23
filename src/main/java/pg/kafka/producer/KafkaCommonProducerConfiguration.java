@@ -2,7 +2,6 @@ package pg.kafka.producer;
 
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +10,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import pg.kafka.common.Commons;
 import pg.kafka.common.KafkaJsonSerializer;
+import pg.kafka.config.KafkaConfigurationProvider;
 import pg.kafka.config.KafkaProperties;
 import pg.kafka.config.KafkaPropertiesProvider;
 import pg.kafka.config.MessagesDestinationConfig;
@@ -36,6 +36,7 @@ public class KafkaCommonProducerConfiguration {
 
     @Bean
     public DestinationResolver destinationResolver(final @NonNull KafkaPropertiesProvider kafkaPropertiesProvider,
+                                                   final @NonNull KafkaConfigurationProvider kafkaConfigurationProvider,
                                                    final @NonNull MessagesDestinationConfig messagesDestinationConfig) {
         var kafkaProperties = kafkaPropertiesProvider.getKafkaProperties();
 
@@ -48,7 +49,7 @@ public class KafkaCommonProducerConfiguration {
                 messageDestinations, producerConfigs);
 
         for (MessageDestination destination : messageDestinations) {
-            var template = buildTemplate(destination, kafkaProperties, producerConfigs);
+            var template = buildTemplate(destination, kafkaProperties, kafkaConfigurationProvider.getProducerConfig(destination.getTopic()).orElse(null), producerConfigs);
             destinations.put(destination.getMessageClass(), destination.getTopic());
             topicToTemplates.put(destination.getTopic(), template);
         }
@@ -60,8 +61,12 @@ public class KafkaCommonProducerConfiguration {
 
     private <T extends Message> KafkaTemplate<String, T> buildTemplate(final MessageDestination destination,
                                                                        final KafkaProperties kafkaProperties,
+                                                                       final pg.kafka.producer.ProducerConfig config,
                                                                        final Map<TopicName, Map<String, Object>> producerConfigs) {
         var producerConfig = Commons.defaultProducerProperties();
+        if (config != null) {
+            producerConfig.putAll(config.getProperties());
+        }
         producerConfig.putAll(producerConfigs.getOrDefault(destination.getTopic(), new HashMap<>()));
         producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServer());
 

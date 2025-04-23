@@ -10,9 +10,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
 import pg.kafka.common.Commons;
+import pg.kafka.consumer.ConsumerConfig;
 import pg.kafka.consumer.KafkaCommonConsumerConfiguration;
 import pg.kafka.producer.KafkaCommonProducerConfiguration;
+import pg.kafka.producer.ProducerConfig;
 import pg.kafka.topic.KafkaCommonTopicConfiguration;
+
+import java.util.List;
 
 
 @Log4j2
@@ -33,6 +37,11 @@ public class KafkaConfiguration {
     public KafkaPropertiesProvider kafkaPropertiesProvider() {
         log.info("Kafka properties: {}", kafkaProperties);
         return new KafkaPropertiesProvider(kafkaProperties);
+    }
+
+    @Bean
+    public KafkaConfigurationProvider kafkaConfigurationProvider(final List<ProducerConfig> producerConfigs, final List<ConsumerConfig> consumerConfigs) {
+        return new KafkaConfigurationProvider(producerConfigs, consumerConfigs);
     }
 
     @Bean(name = "kafkaObjectMapper")

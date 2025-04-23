@@ -23,6 +23,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.backoff.FixedBackOff;
 import pg.kafka.common.Commons;
 import pg.kafka.common.KafkaJsonDeserializer;
+import pg.kafka.config.KafkaConfigurationProvider;
 import pg.kafka.config.KafkaProperties;
 import pg.kafka.config.KafkaPropertiesProvider;
 import pg.kafka.config.MessagesDestinationConfig;
@@ -68,6 +69,7 @@ public class KafkaCommonConsumerConfiguration {
     public List<ConcurrentMessageListenerContainer<String, ? extends Message>> kafkaMessageListeners(
             final @NonNull MessagesDestinationConfig messagesDestinationConfig,
             final @NonNull KafkaPropertiesProvider kafkaPropertiesProvider,
+            final @NonNull KafkaConfigurationProvider kafkaConfigurationProvider,
             final @NonNull MessageHandlerLocator messageHandlerLocator,
             final @NonNull HeadersHolder headersHolder
     ) {
@@ -84,10 +86,14 @@ public class KafkaCommonConsumerConfiguration {
                 continue;
             }
 
+            String consumerGroup = (String) handler.getConsumerGroup().orElseGet(() -> destination.getTopic().getName());
+
             var consumerConfig = Commons.defaultConsumerProperties();
+            var config = kafkaConfigurationProvider.getConsumerConfig(consumerGroup);
+            config.ifPresent(cfg -> consumerConfig.putAll(cfg.getProperties()));
+
             consumerConfig.putAll(consumerConfigs.getOrDefault(destination.getTopic(), new HashMap<>()));
             consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServer());
-            String consumerGroup = (String) handler.getConsumerGroup().orElseGet(() -> destination.getTopic().getName());
 
             var consumerBeanName = handler.getConsumerGroup().isPresent()
                     ? destination.getTopic().getName() + "-listener-" + consumerGroup
