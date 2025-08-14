@@ -27,7 +27,8 @@ import java.util.List;
         KafkaCommonConfiguration.class,
         KafkaCommonTopicConfiguration.class,
         KafkaCommonProducerConfiguration.class,
-        KafkaCommonConsumerConfiguration.class
+        KafkaCommonConsumerConfiguration.class,
+        KafkaProperties.class,
 })
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class KafkaConfiguration {
