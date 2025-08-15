@@ -39,8 +39,11 @@ public class KafkaConsumer extends AbstractConsumerSeekAware implements MessageL
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            log.debug("Processing with handler: {}-{} message: {}",
-                    handler.getConsumerGroup(), handler.getClass().getSimpleName(), message.value());
+            if (handler.getConsumerGroup().isEmpty()) {
+                log.debug("Processing with handler: {} message: {}", handler.getClass().getSimpleName(), message.value());
+            } else {
+                log.debug("Processing with handler: {}-{} message: {}", handler.getConsumerGroup().get(), handler.getClass().getSimpleName(), message.value());
+            }
             handler.handleMessage((Message) message.value());
         } catch (final Exception e) {
             log.error("Error while processing message", e);
