@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Import;
 import pg.kafka.businesscase.ProcessPaymentMessage;
 import pg.kafka.consumer.MessageHandler;
 import pg.kafka.message.MessageDestination;
+import pg.kafka.topic.TopicDefinition;
 import pg.kafka.topic.TopicName;
 import pg.lib.common.spring.config.CommonModuleConfiguration;
 
@@ -25,6 +26,13 @@ import java.util.Optional;
 @Configuration
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class KafkaTestConfiguration {
+
+    @Bean
+    public TopicDefinition paymentProcessingBatchTopicDefinition() {
+        return TopicDefinition.DEFAULT
+                .topic(TopicName.of("payment-processing-batch-topic"))
+                .build();
+    }
 
     @Bean
     public MessageDestination processPaymentMessageDestination() {

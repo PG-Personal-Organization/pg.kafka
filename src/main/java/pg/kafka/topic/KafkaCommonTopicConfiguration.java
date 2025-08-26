@@ -9,27 +9,41 @@ import org.springframework.kafka.core.KafkaAdmin;
 import pg.kafka.config.KafkaProperties;
 import pg.kafka.config.KafkaPropertiesProvider;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Log4j2
 @Configuration
 public class KafkaCommonTopicConfiguration {
 
     @Bean
-    public KafkaAdmin.NewTopics topics(final @NonNull KafkaPropertiesProvider kafkaPropertiesProvider) {
+    public KafkaAdmin.NewTopics topics(final @NonNull KafkaPropertiesProvider kafkaPropertiesProvider, final @NonNull List<TopicDefinition> topicDefinitions) {
         KafkaProperties kafkaProperties = kafkaPropertiesProvider.getKafkaProperties();
         final var topicConfigs = kafkaProperties.getTopics();
+        final var topicNames = topicConfigs.stream().map(TopicConfig::getTopic).toList();
         log.debug("Configuring topics started based on config: {}", topicConfigs);
 
-        NewTopic[] newTopics = topicConfigs.stream()
+        Set<NewTopic> newTopics = topicConfigs.stream()
                 .map(topicConfig -> {
-                    log.debug("Creating topic {} with definition: {}", topicConfig.getTopic().getName(), topicConfig);
+                    log.debug("Creating topic {} with config: {}", topicConfig.getTopic().getName(), topicConfig);
                     return new NewTopic(
                             topicConfig.getTopic().getName(),
                             topicConfig.getPartitions(),
                             (short) topicConfig.getReplicationFactor()
                     );
                 })
-                .toArray(NewTopic[]::new);
+                .collect(Collectors.toSet());
 
-        return new KafkaAdmin.NewTopics(newTopics);
+        for (TopicDefinition topic : topicDefinitions) {
+            if (topicNames.contains(topic.getTopic())) {
+                break;
+            }
+            log.debug("Creating topic {} with definition: {}", topic.getTopic(), topic);
+            newTopics.add(new NewTopic(topic.getTopic().getName(), topic.getPartitions(), (short) topic.getReplicationFactor()));
+        }
+
+        log.debug("Configuring topics finished. Created topics: {}", newTopics);
+        return new KafkaAdmin.NewTopics(newTopics.toArray(NewTopic[]::new));
     }
 }
