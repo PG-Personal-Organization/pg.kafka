@@ -6,19 +6,19 @@
     <parent>
         <groupId>org.pg</groupId>
         <artifactId>parent</artifactId>
-        <version>1.3.0</version>
+        <version>2.0.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
     <artifactId>pg-kafka</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
 
     <name>pg.kafka</name>
     <description>pg.kafka</description>
 
     <properties>
-        <pg-lib-common.version>1.5.0</pg-lib-common.version>
+        <pg-lib-common.version>2.0.0</pg-lib-common.version>
     </properties>
 
     <dependencies>
@@ -88,15 +88,12 @@
         </dependency>
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>central</id>
-            <url>https://repo1.maven.org/maven2</url>
-        </repository>
+    <distributionManagement>
         <repository>
             <id>github</id>
-            <url>https://maven.pkg.github.com/PG-Personal-Organization</url>
+            <name>GitHub Paros998 Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/pg-personal-organization/pg.kafka</url>
         </repository>
-    </repositories>
+    </distributionManagement>
 
 </project>
