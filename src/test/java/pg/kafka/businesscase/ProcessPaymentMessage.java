@@ -19,10 +19,10 @@ public class ProcessPaymentMessage extends Message {
     private String paymentStatus;
     private LocalDateTime paymentDate;
 
-    public ProcessPaymentMessage(String paymentId,
-                                 String orderId,
-                                 String paymentStatus,
-                                 LocalDateTime paymentDate) {
+    public ProcessPaymentMessage(final String paymentId,
+                                 final String orderId,
+                                 final String paymentStatus,
+                                 final LocalDateTime paymentDate) {
         super(paymentDate);
         this.paymentId = paymentId;
         this.orderId = orderId;
