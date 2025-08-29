@@ -13,6 +13,7 @@ import pg.kafka.consumer.MessageHandler;
 import pg.kafka.message.MessageDestination;
 import pg.kafka.topic.TopicDefinition;
 import pg.kafka.topic.TopicName;
+import pg.lib.common.spring.auth.NoOpHeaderAuthenticationConfiguration;
 import pg.lib.common.spring.config.CommonModuleConfiguration;
 
 import java.util.ArrayList;
@@ -21,7 +22,8 @@ import java.util.Optional;
 
 @Import({
         KafkaConfiguration.class,
-        CommonModuleConfiguration.class
+        CommonModuleConfiguration.class,
+        NoOpHeaderAuthenticationConfiguration.class
 })
 @Configuration
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
