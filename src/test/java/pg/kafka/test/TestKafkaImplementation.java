@@ -1,7 +1,7 @@
 package pg.kafka.test;
 
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 
-@Slf4j
+@Log4j2
 @KafkaIntegrationTest
 @EmbeddedKafka(brokerProperties = {"transaction.max.timeout.ms=3600000"})
 class TestKafkaImplementation {

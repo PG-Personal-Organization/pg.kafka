@@ -3,6 +3,7 @@ package pg.kafka.topic;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaAdmin;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class KafkaCommonTopicConfiguration {
 
     @Bean
+    @ConditionalOnProperty(name = "pg.kafka-admin.auto-create", havingValue = "true", matchIfMissing = true)
     public KafkaAdmin.NewTopics topics(final @NonNull KafkaPropertiesProvider kafkaPropertiesProvider, final @NonNull List<TopicDefinition> topicDefinitions) {
         KafkaProperties kafkaProperties = kafkaPropertiesProvider.getKafkaProperties();
         final var topicConfigs = kafkaProperties.getTopics();
