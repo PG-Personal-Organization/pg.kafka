@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Headers;
+import org.slf4j.MDC;
 import org.springframework.kafka.listener.AbstractConsumerSeekAware;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.util.StopWatch;
@@ -51,6 +52,7 @@ public class KafkaConsumer extends AbstractConsumerSeekAware implements MessageL
             watch.stop();
             log.info("Consumer :'{}' processed event from partition: {}-{}, processing time: {} ms", consumerGroup,
                     message.topic(), message.partition(), watch.getTotalTimeMillis());
+            MDC.remove(HeaderNames.TRACE_ID);
         }
     }
 
@@ -58,10 +60,14 @@ public class KafkaConsumer extends AbstractConsumerSeekAware implements MessageL
         headers.forEach(it -> headersHolder.putHeader(it.key(), new String(it.value())));
         headersHolder.tryToGetHeader(HeaderNames.TRACE_ID).ifPresentOrElse(
                 header -> {
+                    MDC.put(HeaderNames.TRACE_ID, header);
+                    log.debug("Trace id header found, using it: {}", header);
                 },
                 () -> {
                     log.debug("No trace id header found, adding new one");
-                    headersHolder.putHeader(HeaderNames.TRACE_ID, UUID.randomUUID().toString());
+                    String traceId = UUID.randomUUID().toString();
+                    MDC.put(HeaderNames.TRACE_ID, traceId);
+                    headersHolder.putHeader(HeaderNames.TRACE_ID, traceId);
                 });
         return headersHolder.getAllHeaders();
     }
