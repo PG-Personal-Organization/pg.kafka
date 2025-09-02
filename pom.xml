@@ -12,13 +12,13 @@
 
     <artifactId>pg-kafka</artifactId>
     <packaging>jar</packaging>
-    <version>2.3.0</version>
+    <version>2.3.1</version>
 
     <name>pg.kafka</name>
     <description>pg.kafka</description>
 
     <properties>
-        <pg-lib-common.version>2.4.0</pg-lib-common.version>
+        <pg-lib-common.version>2.4.1</pg-lib-common.version>
     </properties>
 
     <dependencies>
