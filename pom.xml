@@ -6,19 +6,19 @@
     <parent>
         <groupId>org.pg</groupId>
         <artifactId>parent</artifactId>
-        <version>2.0.0</version>
+        <version>2.1.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
     <artifactId>pg-kafka</artifactId>
     <packaging>jar</packaging>
-    <version>2.3.1</version>
+    <version>2.3.2</version>
 
     <name>pg.kafka</name>
     <description>pg.kafka</description>
 
     <properties>
-        <pg-lib-common.version>2.4.1</pg-lib-common.version>
+        <pg-lib-common.version>2.5.0</pg-lib-common.version>
     </properties>
 
     <dependencies>
