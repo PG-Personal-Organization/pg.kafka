@@ -47,7 +47,7 @@ public class KafkaConsumer extends AbstractConsumerSeekAware implements MessageL
             }
             handler.handleMessage((Message) message.value());
         } catch (final Exception e) {
-            log.error("Error while processing message", e);
+            log.error("Error while processing message, cause {}", e.getMessage(), e);
         } finally {
             watch.stop();
             log.info("Consumer :'{}' processed event from partition: {}-{}, processing time: {} ms", consumerGroup,
