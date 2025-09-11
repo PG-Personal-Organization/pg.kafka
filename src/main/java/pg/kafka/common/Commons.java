@@ -60,6 +60,7 @@ public class Commons {
         props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, defaultMaxBlockMillis);
         props.put(ProducerConfig.TRANSACTION_TIMEOUT_CONFIG, defaultProducerTransactionTimeout);
         props.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, UUID.randomUUID().toString());
+        props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, "org.apache.kafka.clients.producer.RoundRobinPartitioner");
         // See https://kafka.apache.org/documentation/#producerconfigs for more properties
         return props;
     }
